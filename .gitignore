@@ -1,0 +1,9 @@
+**/migrations/*.py
+!*/migrations/__init__.py
+backstage/logs/*
+*.sqlite3
+backstage/backstage/settings/prod.py
+venv
+*/__pycache__/
+__pycache__/
+.idea

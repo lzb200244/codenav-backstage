@@ -1,0 +1,302 @@
+[
+  {
+    "categories": "Java",
+    "type": 2
+  },
+  {
+    "categories": "C#",
+    "type": 2
+  },
+  {
+    "categories": "PHP",
+    "type": 2
+  },
+  {
+    "categories": "C++",
+    "type": 2
+  },
+  {
+    "categories": "C语言",
+    "type": 2
+  },
+  {
+    "categories": "HTML",
+    "type": 2
+  },
+  {
+    "categories": "CSS",
+    "type": 2
+  },
+  {
+    "categories": "Javascript",
+    "type": 2
+  },
+  {
+    "categories": "Go",
+    "type": 2
+  },
+  {
+    "categories": "Python",
+    "type": 2
+  },
+  {
+    "categories": "Rust",
+    "type": 2
+  },
+  {
+    "categories": "Ruby",
+    "type": 2
+  },
+  {
+    "categories": "Swift",
+    "type": 2
+  },
+  {
+    "categories": "Scala",
+    "type": 2
+  },
+  {
+    "categories": "Lua",
+    "type": 2
+  },
+  {
+    "categories": "Bash",
+    "type": 2
+  },
+  {
+    "categories": "Kotlin",
+    "type": 2
+  },
+  {
+    "categories": "html",
+    "type": 3
+  },
+  {
+    "categories": "css",
+    "type": 3
+  },
+  {
+    "categories": "Javascript",
+    "type": 3
+  },
+  {
+    "categories": "Typescript",
+    "type": 3
+  },
+  {
+    "categories": "Vue",
+    "type": 3
+  },
+  {
+    "categories": "React",
+    "type": 3
+  },
+  {
+    "categories": "Angular",
+    "type": 3
+  },
+  {
+    "categories": "打包工具",
+    "type": 3
+  },
+  {
+    "categories": "数据库",
+    "type": 4
+  },
+  {
+    "categories": "linux",
+    "type": 4
+  },
+  {
+    "categories": "设计模式",
+    "type": 4
+  },
+  {
+    "categories": "算法",
+    "type": 4
+  },
+  {
+    "categories": "软件测试",
+    "type": 4
+  },
+  {
+    "categories": "web框架",
+    "type": 4
+  },
+  {
+    "categories": "分布式设计",
+    "type": 4
+  },
+  {
+    "categories": "虚拟化/云原生",
+    "type": 4
+  },
+  {
+    "categories": "大数据",
+    "type": 4
+  },
+  {
+    "categories": "安全",
+    "type": 4
+  },
+  {
+    "categories": "DevOps",
+    "type": 4
+  },
+  {
+    "categories": "版本控制",
+    "type": 4
+  },
+  {
+    "categories": "腾讯",
+    "type": 5
+  },
+  {
+    "categories": "阿里",
+    "type": 5
+  },
+  {
+    "categories": "小米",
+    "type": 5
+  },
+  {
+    "categories": "字节",
+    "type": 5
+  },
+  {
+    "categories": "oppo",
+    "type": 5
+  },
+  {
+    "categories": "百度",
+    "type": 5
+  },
+  {
+    "categories": "网易",
+    "type": 5
+  },
+  {
+    "categories": "vivo",
+    "type": 5
+  },
+  {
+    "categories": "华为",
+    "type": 5
+  },
+  {
+    "categories": "快手",
+    "type": 5
+  },
+  {
+    "categories": "知乎",
+    "type": 5
+  },
+  {
+    "categories": "其他",
+    "type": 5
+  },
+  {
+    "categories": "前端",
+    "type": 6
+  },
+  {
+    "categories": "后端",
+    "type": 6
+  },
+  {
+    "categories": "运维",
+    "type": 6
+  },
+  {
+    "categories": "人工智能",
+    "type": 6
+  },
+  {
+    "categories": "网络工程",
+    "type": 6
+  },
+  {
+    "categories": "移动开发",
+    "type": 6
+  },
+  {
+    "categories": "算法",
+    "type": 6
+  },
+  {
+    "categories": "源码",
+    "type": 6
+  },
+  {
+    "categories": "云服务",
+    "type": 6
+  },
+  {
+    "categories": "数据结构",
+    "type": 6
+  },
+  {
+    "categories": "框架",
+    "type": 6
+  },
+  {
+    "categories": "数据分析",
+    "type": 6
+  },
+  {
+    "categories": "数据集",
+    "type": 7
+  },
+  {
+    "categories": "工具",
+    "type": 7
+  },
+  {
+    "categories": "博客",
+    "type": 7
+  },
+  {
+    "categories": "博主",
+    "type": 7
+  },
+  {
+    "categories": "网站",
+    "type": 7
+  },
+  {
+    "categories": "官网",
+    "type": 7
+  },
+  {
+    "categories": "教程",
+    "type": 7
+  },
+  {
+    "categories": "机器学习",
+    "type": 6
+  },
+  {
+    "categories": "文章",
+    "type": 7
+  },
+  {
+    "categories": "书籍",
+    "type": 7
+  },
+  {
+    "categories": "leetcode",
+    "type": 7
+  },
+  {
+    "categories": "可视化",
+    "type": 6
+  },
+  {
+    "categories": "mysql",
+    "type": 4
+  },
+  {
+    "categories": "面试题",
+    "type": 7
+  }
+]
