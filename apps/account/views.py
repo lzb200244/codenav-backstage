@@ -13,14 +13,15 @@ from utils.auth.baseAuth import MyBaseAuth
 from utils.auth.loginAuth import LoginAuth
 from utils.md5 import md5, make_uuid
 from utils.pagination import MyPagination
-from utils.redis_pool import REDIS_POOL
+
 from utils.response_status import APIResponse
 from rest_framework.mixins import UpdateModelMixin, ListModelMixin, DestroyModelMixin, CreateModelMixin
 from QQLoginTool import QQtool
 from rest_framework.exceptions import ValidationError
-
+from django_redis import get_redis_connection
 import logging
 
+REDIS_POOL = get_redis_connection('account')
 logger = logging.getLogger('account')  #
 
 

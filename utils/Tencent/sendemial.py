@@ -1,9 +1,11 @@
 import random
 from django.core.mail import send_mail
 
-
-from utils.redis_pool import REDIS_POOL
 from django.conf import settings
+from django_redis import get_redis_connection
+
+REDIS_POOL = get_redis_connection('account')
+
 
 class SendEmail(object):
     def make_int(self):

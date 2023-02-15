@@ -1,7 +1,7 @@
 from rest_framework.authentication import BaseAuthentication, TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from apps.account.models import UserInfo
-from utils.redis_pool import REDIS_POOL
+
 from utils.response_status import APIResponse
 
 
@@ -9,6 +9,8 @@ class LoginAuth(BaseAuthentication):
     response = None
 
     def authenticate(self, request):
+        from django_redis import get_redis_connection
+        REDIS_POOL = get_redis_connection('account')
         token = request.META.get("HTTP_TOKEN")
         if not token:
             self.response = APIResponse(msg="请先登入", )

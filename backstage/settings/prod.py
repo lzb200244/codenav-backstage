@@ -68,13 +68,13 @@ DATABASES = {
         'NAME': 'codenav',
         'USER': 'root',
         'PASSWORD': '200244',
-        'HOST': '127.0.0.1',
+        'HOST': '172.17.0.3',
         'PORT': '3306',
     }
 }
 APPEND_SLASH = False
 REDIS_CONN = {
-    "host": "172.17.0.3",
+    "host": "172.17.0.2",
     "port": 6379,
     "password": 200244
 }

@@ -1,8 +1,9 @@
 import json
-from utils.redis_pool import REDIS_POOL
+
+from django_redis import get_redis_connection
 
 """统词器"""
-
+REDIS_POOL = get_redis_connection('account')
 
 class CountWord(object):
     """记录词出现的次数生成词语图"""
