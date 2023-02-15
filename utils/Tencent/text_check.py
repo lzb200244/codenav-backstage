@@ -45,8 +45,9 @@ class TextCheck:
             }
 
         except TencentCloudSDKException as err:
-            print(err)
+            pass
+            # print(err)
 
 
 check = TextCheck()
-print(check.check('wsada'))
+# print(check.check('wsada'))

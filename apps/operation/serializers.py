@@ -1,5 +1,6 @@
 from django.db.models import F, Sum
 from rest_framework import serializers
+from django.conf import settings
 from rest_framework.exceptions import ValidationError
 from apps.account.models import SiteData, SiteDataUser, UserDetail
 from apps.operation.models import Comments, Inform, News
@@ -194,19 +195,28 @@ class SiteDetailSerializers(serializers.ModelSerializer):
         ]
 
     def get_update_time(self, val):
-
+        # print('update')
         return val.update_time.strftime("%Y-%m-%d %H:%M")
 
     def get_datatype(self, val):
+
         return [item.categories for item in val.datatype.all()]
 
     def get_recommend(self, val):
+
+        if val.recommend is not None:
+            return {
+                "name": val.recommend.detail.name,
+                "recommend_avatar": val.recommend.detail.userAvatar
+            }
         return {
-            "name": val.recommend.detail.name,
-            "recommend_avatar": val.recommend.detail.userAvatar
+
+            'name': '管理员',
+            'recommend_avatar': settings.SIMPLEUI_LOGO
         }
 
     def get_sitedatauser(self, val):
+        # print('get_sitedatauser')
         # user = self.context['request'].user_obj
         # if user:
         #     print(SiteDataUser.objects.filter(sitedata=val))
@@ -220,6 +230,7 @@ class SiteDetailSerializers(serializers.ModelSerializer):
         }
 
     def get_rating(self, val):
+        # print('get_sitedatauser')
         user = self.context['request'].user_obj
         uid = self.context['request'].data.get("uid")
         site_data_user_obj = SiteDataUser.objects.filter(sitedata=val)

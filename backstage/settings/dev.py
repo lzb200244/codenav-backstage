@@ -86,8 +86,46 @@ CACHES = {
             # "PASSWORD": "foobared"  # redis密码
         }
     },
+    "operation": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_CONN.get('host')}:6379/3",  # 安装redis的主机的 IP 和 端口
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 1000,
+                "encoding": 'utf-8'
+            },
+            # "PASSWORD": "foobared"  # redis密码
+        }
+    },
+    # 缓存
+    "catch": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_CONN.get('host')}:6379/4",  # 安装redis的主机的 IP 和 端口
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 1000,
+                "encoding": 'utf-8'
+            },
+            # "PASSWORD": "foobared"  # redis密码
+        }
+    },
+    "test": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_CONN.get('host')}:6379/5",  # 安装redis的主机的 IP 和 端口
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 1000,
+                "encoding": 'utf-8'
+            },
+            # "PASSWORD": "foobared"  # redis密码
+        }
+    },
 
 }
+
 # todo 线上collectstatic配置
 # STATIC_URL="admin/static"
 # STATIC_ROOT="admin/static"
@@ -118,5 +156,4 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 

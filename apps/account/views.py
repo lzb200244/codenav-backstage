@@ -9,7 +9,6 @@ from apps.account.serializers import (RegisterSerializer, UserInfoSerializers, A
                                       InformSerializers)
 from apps.operation.models import Inform
 from django.conf import settings
-
 from utils.auth.baseAuth import MyBaseAuth
 from utils.auth.loginAuth import LoginAuth
 from utils.md5 import md5, make_uuid
@@ -18,8 +17,11 @@ from utils.redis_pool import REDIS_POOL
 from utils.response_status import APIResponse
 from rest_framework.mixins import UpdateModelMixin, ListModelMixin, DestroyModelMixin, CreateModelMixin
 from QQLoginTool import QQtool
-
 from rest_framework.exceptions import ValidationError
+
+import logging
+
+logger = logging.getLogger('account')  #
 
 
 class BaseView(object):
@@ -56,19 +58,23 @@ class LoginMethod(BaseView):
 
     def service_tencent(self, ):
         """qq登录"""
-        qq = OAuthQQ(client_id=settings.QQ_CLIENT_ID, client_secret=settings.QQ_CLIENT_SECRET, redirect_uri=settings.QQ_REDIRECT_URI,
+        qq = OAuthQQ(client_id=settings.QQ_CLIENT_ID, client_secret=settings.QQ_CLIENT_SECRET,
+                     redirect_uri=settings.QQ_REDIRECT_URI,
                      state="next")
         try:
             token = qq.get_access_token(self.data.get("user_code"))
         except:
             self.msg = "临时凭证过期"
+            logger.warning(self.msg)
             raise ValidationError(detail=self.msg)
         if not token:
             self.msg = "非法登录"
+            logger.warning(self.msg)
             raise ValidationError(detail=self.msg)
         user_obj = UserInfo.objects.filter(qqid=qq.get_open_id(token))
         if not user_obj.exists():
             self.msg = "此账号未注册"
+            logger.info(self.msg)
             raise ValidationError(detail=self.msg)
         return user_obj
 
@@ -81,21 +87,23 @@ class Tencent(BaseView, APIView):
                  state="next")
 
     def get(self, request):
+        """获取qq二维码"""
         return APIResponse(self.qq.get_qq_url())
 
     def get_authenticators(self):
-        if self.request.method == 'GET':
+        if self.request.method != 'GET':
             return super(Tencent, self).get_authenticators()
 
     def post(self, request):
+        """绑定qq"""
         try:
             token = self.qq.get_access_token(request.data.get("code"))
         except:
+            logger.warning('临时凭证过期')
             return APIResponse(data="", code=1000, msg='临时凭证过期')
         user_obj = request.user_obj.user
         user_obj.qqid = self.qq.get_open_id(token)
         user_obj.save()
-
         return APIResponse(data="success", code=1000, msg='绑定成功')
 
 
@@ -110,16 +118,24 @@ class RecommendListView(ListModelMixin, DestroyModelMixin, CreateModelMixin, Gen
 
         return SiteData.objects.filter(recommend=self.request.user).order_by('-update_time').all()
 
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == 'GET':
+            return super(RecommendListView, self).get_serializer(*args, **kwargs)
+        return self.serializer_class(data=self.request.data, context={'request': self.request})
+
+    def get_object(self):
+        if self.request.method in ['DELETE', 'PUT']:
+            query = self.get_queryset().filter(uid=self.request.data.get('uid'))
+            if query.exists():  # 存在就返回
+                return query.first()
+            return query  # 空对象
+        super(RecommendListView, self).get_object()
+
     def get(self, request):
 
         """用户推荐记录"""
 
         return APIResponse(self.list(request).data)
-
-    def get_serializer(self, *args, **kwargs):
-        if self.request.method == 'GET':
-            return super(RecommendListView, self).get_serializer(*args, **kwargs)
-        return self.serializer_class(data=self.request.data, context={'request': self.request})
 
     def post(self, request, *args, **kwargs):
         """用户推荐"""
@@ -132,14 +148,6 @@ class RecommendListView(ListModelMixin, DestroyModelMixin, CreateModelMixin, Gen
         instance.isvalid = 1
         instance.save()
         return APIResponse(data='success', code=1000)
-
-    def get_object(self):
-        if self.request.method in ['DELETE', 'PUT']:
-            query = self.get_queryset().filter(uid=self.request.data.get('uid'))
-            if query.exists():  # 存在就返回
-                return query.first()
-            return query  # 空对象
-        super(RecommendListView, self).get_object()
 
     def delete(self, request, ):
         """删除"""

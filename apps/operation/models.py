@@ -1,5 +1,4 @@
 from django.db import models
-from apps.account.models import SiteData, UserInfo
 
 
 # 评论表

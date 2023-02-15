@@ -1,3 +1,6 @@
+import datetime
+import logging
+
 from django.db.models import F
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
@@ -6,6 +9,7 @@ from rest_framework.mixins import ListModelMixin, UpdateModelMixin
 from rest_framework.generics import GenericAPIView
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+from rest_framework_extensions.cache.decorators import cache_response
 from apps.account.models import SiteData, SiteDataUser, UserDetail, UserInfo, Type, Categories
 from apps.account.views import BaseView
 from apps.operation.filters import SiteDataFilter
@@ -16,16 +20,49 @@ from utils.Tencent.sendemial import SENDEMAIL
 from utils.response_status import APIResponse
 from utils.Tencent.cos import tencent
 from utils.auth.loginAuth import LoginAuth
-from utils.makeWordCloud.makeWordCloud import MakeWord
+# from utils.makeWordCloud.makeWordCloud import MakeWord
 from utils.md5 import make_uuid
 from utils.pagination import MyPagination
-from utils.CountWord import CountWord
+# from utils.CountWord import CountWord
 from utils.workshop.ReFactory import Pattern
+
+logger = logging.getLogger('operation')
+
+
+@csrf_exempt
+def save_file(request):
+    """图片上传"""
+    try:
+        file_obj = request.FILES.get("site_img")
+        file_obj2 = request.FILES.get("user_img")
+        if file_obj:
+            ext = file_obj.name.rsplit(".")[-1]
+            image_url = tencent.upload_file(local_file_name=file_obj,
+                                            file_name=str(make_uuid()) + "." + ext)
+        else:
+            # //上传头像
+            pk = request.POST.get("pk")
+            user_obj = UserDetail.objects.filter(userinfo=pk).first()
+
+            ext = file_obj2.name.rsplit(".")[-1]
+            image_url = tencent.upload_file(local_file_name=file_obj2,
+                                            file_name=str(make_uuid()) + "." + ext,
+                                            bucket="userimages-1311013567")
+            # 删除原来数据(桶
+            get_old = user_obj.userAvatar
+            tencent.delete_file(get_old.split("/")[-1])
+            user_obj.userAvatar = image_url
+            user_obj.save()
+    except Exception as e:
+        image_url = 0
+    return HttpResponse(image_url)
 
 
 class AllSelects(APIView):
     """所有的选项"""
 
+    # 缓存7天
+    @cache_response(timeout=datetime.timedelta(days=7).days, cache='catch')
     def get(self, request):
         inform_choices = Inform.MESSAGE_TYPE
         choices = dict(Type.TYPE_CHOICES)
@@ -84,7 +121,9 @@ class SiteDetailView(BaseView, ListModelMixin, GenericAPIView):
     serializer_class = SiteDetailSerializers  # 序列化器
 
     def get_serializer(self, *args, **kwargs):
-        return self.serializer_class(self.queryset, context={'request': self.request})
+        request = self.request
+
+        return SiteDetailSerializers(context={'request': request}, instance=self.queryset)
 
     def get_queryset(self):
         uid = self.request.query_params.get('uid')
@@ -92,12 +131,13 @@ class SiteDetailView(BaseView, ListModelMixin, GenericAPIView):
         if query.exists():
             self.queryset = query.first()
             return self.queryset
+        return self.queryset.first()
 
     def get(self, request):
         return APIResponse(self.list(request).data)
 
 
-class HandleUserOperation(BaseView, UpdateModelMixin, GenericAPIView, ):
+class SiteDataOperation(BaseView, UpdateModelMixin, GenericAPIView, ):
     """处理用户对数据操作"""
     queryset = SiteData.objects.all()
     serializer_class = RecommendSerializer
@@ -148,12 +188,12 @@ class HandleUserOperation(BaseView, UpdateModelMixin, GenericAPIView, ):
         if all([status, instance]):
             # 先判断当前对象是否存在
             site_obj.update(collect_num=F('collect_num') - 1)
-            self.code = 401
+            self.code = 1201
             if instance:
                 rating = instance.rating
                 site_obj.update(rating=F('rating') - rating)
                 instance.delete()
-                self.code = 200
+                self.code = 1000
         if not status and not instance:
             # 判断当前对象是否存在
             user_obj = UserDetail.objects.filter(id=request.user.pk, ).first()
@@ -172,7 +212,6 @@ class ReplyView(BaseView, ListModelMixin, CreateModelMixin, GenericAPIView):
     queryset = Comments.objects.all()
 
     def get_queryset(self):
-        print(self.request.query_params.get("uid"))
         uid = self.request.query_params.get("uid").split('?')[0]
         return self.queryset.filter(reply_site_id=uid).order_by("-create_datetime")
 
@@ -199,53 +238,31 @@ class NewsView(ListModelMixin, GenericAPIView):
     serializer_class = NewsSerializers
     queryset = News.objects.all()
 
+    @cache_response(timeout=datetime.timedelta(days=1).days, cache='catch')
     def get(self, request):
         return APIResponse(self.list(request).data)
 
 
-@csrf_exempt
-def save_file(request):
-    """图片上传"""
-    try:
-        file_obj = request.FILES.get("site_img")
-        file_obj2 = request.FILES.get("user_img")
-        if file_obj:
-            ext = file_obj.name.rsplit(".")[-1]
-            image_url = tencent.upload_file(local_file_name=file_obj,
-                                            file_name=str(make_uuid()) + "." + ext)
-        else:
-            # //上传头像
-            pk = request.POST.get("pk")
-            user_obj = UserDetail.objects.filter(userinfo=pk).first()
+class SpiderView(APIView):
+    authentication_classes = [LoginAuth]
 
-            ext = file_obj2.name.rsplit(".")[-1]
-            image_url = tencent.upload_file(local_file_name=file_obj2,
-                                            file_name=str(make_uuid()) + "." + ext,
-                                            bucket="userimages-1311013567")
-            # 删除原来数据(桶
-            get_old = user_obj.userAvatar
-            tencent.delete_file(get_old.split("/")[-1])
-            user_obj.userAvatar = image_url
-            user_obj.save()
-    except Exception as e:
-        image_url = 0
-    return HttpResponse(image_url)
+    def get(self, request):
+        """爬取图片"""
+        url = request.query_params.get("spider_url")
+        try:
+            if not url.startswith("http"):
+                obj = GetSiteDetail(site_url="https://" + url)
+            else:
+                obj = GetSiteDetail(site_url=url)
+            return APIResponse(obj.get_site_ico)
+        except Exception as e:
+            logger.warning(f'{url}解析错误:{e}')
+            return APIResponse(-1, code=1204, msg='解析错误')
 
 
-def spider(request):
-    try:
-        url = request.GET.get("spider_url")
-        if not url.startswith("http"):
-            obj = GetSiteDetail(site_url="https://" + url)
-        else:
-            obj = GetSiteDetail(site_url=url)
-        return APIResponse(obj.get_site_ico)
-    except Exception as e:
-        return APIResponse(-1)
-
-
+"""
 class OuterApi(APIView):
-    """这应该是个定时任务每天零点删除一次词云"""
+    这应该是个定时任务每天零点删除一次词云
 
     def get(self, request):
         words = [item for item in CountWord.get().items()]
@@ -253,6 +270,7 @@ class OuterApi(APIView):
         res = MakeWord(words=sorted(words, reverse=True, key=lambda x: x[1])).make()
         # 上传到cos存储
         return APIResponse("success" if res else "error", )
+"""
 
 
 class EmailUtilView(APIView):
@@ -263,11 +281,11 @@ class EmailUtilView(APIView):
         pattern = Pattern()
         pattern = pattern["email"]
         if not pattern.match(email):
-            return APIResponse(**{"code": 401, "msg": "邮箱格式错误"})
+            return APIResponse(**{"code": 1201, "msg": "邮箱格式错误"})
         if not UserInfo.objects.filter(email=email).first():
-            return APIResponse(**{"code": 401, "msg": "邮箱不存在"})
+            return APIResponse(**{"code": 1201, "msg": "邮箱不存在"})
         res = SENDEMAIL.config(title="CodeMiner-site", msg="", to=email,
                                code='str')
         if not res:
-            return APIResponse(**{"code": 401, "msg": "验证码发送失败"})
-        return APIResponse(**{"code": 200, "msg": ""})
+            return APIResponse(**{"code": 1201, "msg": "验证码发送失败"})
+        return APIResponse(**{"code": 1000, "msg": "存储"})

@@ -7,11 +7,11 @@ import json
 from utils.cal_week import set_score, get_week_key
 import requests
 
+import logging
 
-print(get_week_key())
-
-conn = get_redis_connection('account')
-print(conn.keys())
+# 生成一个以当前模块名的log实例
+logger = logging.getLogger('recommend')  # 拿取collect实例
+logger.info('临时凭证过期')
 dic = {
     'username': 'lzb威威',
     'avatar': 'https//casasd2/'
@@ -22,7 +22,7 @@ dic = {
 # 第一到最后
 # set_score(conn, 'WEEK_RANK:2023-02-06', 1, '200244')
 # print(conn.zrank('WEEK_RANK:2023-02-06', '2632141215'))
-print(conn.zrange('WEEK_RANK:2023-02-13', 0, -1, withscores=True))
+# print(conn.zrange('WEEK_RANK:2023-02-13', 0, -1, withscores=True))
 #
 # # ZREVRANK
 # print(conn.zrevrank('WEEK_RANK:2023-02-06', '2632141215')+1)

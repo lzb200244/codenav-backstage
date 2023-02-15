@@ -45,4 +45,5 @@ class SendEmail(object):
 SENDEMAIL = SendEmail()
 
 if __name__ == '__main__':
-    print("邮箱")
+    # print("邮箱")
+    pass

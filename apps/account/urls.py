@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path
 
 from apps.account.views import AccountView, Tencent, RecommendListView, InformView
 from rest_framework import routers
@@ -8,7 +8,7 @@ router = routers.SimpleRouter()
 
 urlpatterns = [
     # 校验
-    # re_path("codevalid", AccountCode.as_view()),
+
     # 用户
     path("user", AccountView.as_view()),
     path("tencent", Tencent.as_view()),

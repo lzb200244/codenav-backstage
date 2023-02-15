@@ -1,9 +1,7 @@
 import datetime
-
 from django_filters.rest_framework import DjangoFilterBackend
 from django_redis import get_redis_connection
 from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.hall.filters import UserFilter
@@ -14,7 +12,6 @@ from utils.response_status import APIResponse
 
 class Test(APIView):
     filter_backends = (DjangoFilterBackend,)
-
     filter_class = UserFilter  # 指定过滤器类
     # 过滤字段
     filter_fields = ['username', ]
@@ -31,6 +28,7 @@ class RankView(GenericAPIView):
         super(RankView, self).__init__(*args, **kwargs)
 
     def rank(self, rank_list, conn):
+
         rank = []
         for name, score in rank_list:
             rank.append(

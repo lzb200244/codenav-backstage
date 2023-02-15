@@ -227,7 +227,6 @@ class RecommendSerializers(serializers.ModelSerializer):
 
         instance.save()
         return instance
-        # SiteData.objects.create(validated_data)
 
 
 class InformSerializers(serializers.ModelSerializer):

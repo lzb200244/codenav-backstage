@@ -11,7 +11,7 @@ class UserInfo(models.Model):
     token = models.CharField(verbose_name="token", blank=True, default=make_uuid(), null=False, max_length=128)
     qqid = models.CharField(verbose_name="腾讯ID", null=True, max_length=128)
 
-    detail = models.OneToOneField(to="account.UserDetail", on_delete=models.CASCADE)
+    detail = models.OneToOneField(to="UserDetail", on_delete=models.CASCADE)
     join_time = models.DateTimeField(auto_now_add=True, verbose_name="加入日期")
 
     def save(self, *args, **kwargs):
@@ -31,7 +31,7 @@ class UserDetail(models.Model):
     """用户详细信息"""
     qq = models.CharField(default="暂无", blank=True, null=True, help_text="QQ号必须唯一", max_length=18)
     name = models.CharField(max_length=32, help_text="请输入昵称", blank=True, null=True, default="勤劳的搬运工")
-    habit = models.ManyToManyField(to="account.Categories", )
+    habit = models.ManyToManyField(to="Categories", )
     message = models.TextField(default="我来自外太空!", blank=True, null=True)
     WORK_CHOICES = ((1, "学生"),
                     (2, "在职"),
@@ -131,8 +131,8 @@ class SiteData(models.Model):
 # 自定义第三张user和sitedata表
 class SiteDataUser(models.Model):
     """自定义第三张表与SiteData和User绑定关系"""
-    user = models.ForeignKey(verbose_name="参与者", on_delete=models.CASCADE, to="account.UserInfo", related_name="user")
-    sitedata = models.ForeignKey(verbose_name="项目", on_delete=models.CASCADE, to="account.SiteData",
+    user = models.ForeignKey(verbose_name="参与者", on_delete=models.CASCADE, to="UserInfo", related_name="user")
+    sitedata = models.ForeignKey(verbose_name="项目", on_delete=models.CASCADE, to="SiteData",
                                  related_name="sitedata")
     star = models.BooleanField(verbose_name="星标", default=False)
     rating = models.FloatField(default=0)

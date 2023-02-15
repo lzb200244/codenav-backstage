@@ -72,12 +72,13 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+APPEND_SLASH = False
 REDIS_CONN = {
     "host": "172.17.0.3",
     "port": 6379,
     "password": 200244
 }
-APPEND_SLASH = False
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -88,7 +89,7 @@ CACHES = {
                 "max_connections": 1000,
                 "encoding": 'utf-8'
             },
-            "PASSWORD": REDIS_CONN.get('password')  # redis密码
+            # "PASSWORD": "foobared"  # redis密码
         }
     },
     "account": {
@@ -100,7 +101,44 @@ CACHES = {
                 "max_connections": 1000,
                 "encoding": 'utf-8'
             },
-            "PASSWORD": REDIS_CONN.get('password')
+            # "PASSWORD": "foobared"  # redis密码
+        }
+    },
+    "operation": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_CONN.get('host')}:6379/3",  # 安装redis的主机的 IP 和 端口
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 1000,
+                "encoding": 'utf-8'
+            },
+            # "PASSWORD": "foobared"  # redis密码
+        }
+    },
+    # 缓存
+    "catch": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_CONN.get('host')}:6379/4",  # 安装redis的主机的 IP 和 端口
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 1000,
+                "encoding": 'utf-8'
+            },
+            # "PASSWORD": "foobared"  # redis密码
+        }
+    },
+    "test": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_CONN.get('host')}:6379/5",  # 安装redis的主机的 IP 和 端口
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 1000,
+                "encoding": 'utf-8'
+            },
+            # "PASSWORD": "foobared"  # redis密码
         }
     },
 
@@ -153,90 +191,99 @@ LOGGING = {
         },
     },
     'handlers': {
+        # 名字睡意
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',  # StreamHandler处理方式
             'formatter': 'default'
         },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.TimedRotatingFileHandler',  # 按时间分类存储日志文件
-            'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
-            'when': "D",
-            'interval': 1,
-            'formatter': 'default'
+        # 定义一个为account的处理器
+        'account': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',  # 保存日志自动切割
+            'filename': os.path.join(BASE_DIR, 'logs/account.log'),
+            'formatter': 'default',
+            'backupCount': 4,  # 备份info.log.1 info.log.2 info.log.3 info.log.4
+            'maxBytes': 1024 * 1024 * 50,  # 日志大小50m
+            'encoding': 'utf-8'
         },
-        "request": {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/request.log'),
-            'formatter': 'default'
+        "error": {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'encoding': 'utf-8',
+            'filename': os.path.join(BASE_DIR, 'logs/error.log'),
+            'formatter': 'default',
+            'backupCount': 5,  # 备份info.log.1 info.log.2 info.log.3 info.log.4
+            'maxBytes': 1024 * 1024 * 50,  # 日志大小50m
         },
-        # 请求
+        # 服务错误
         "server": {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'logs/server.log'),
             'formatter': 'default'
         },
-        "root": {
+        # 请求
+        "request": {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/root.log'),
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/request.log'),
+            'when': 'D',
+            'backupCount': 4,
+            'encoding': 'utf-8',
             'formatter': 'default'
         },
 
-        "db_backends": {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/db_backends.log'),
+        "waring": {
+            'level': 'WARNING',
+            'class': 'logging.handlers.TimedRotatingFileHandler',  # 按时间分类存储日志文件
+            'filename': os.path.join(BASE_DIR, 'logs/waring.log'),
+            'when': 'D',
+            'backupCount': 4,
+            'encoding': 'utf-8',
             'formatter': 'default'
         },
-        # 好像是改变了文件内容就会记录
-        "autoreload": {
+        "operation": {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/autoreload.log'),
-            'formatter': 'default'
-        }
+            'class': 'logging.handlers.RotatingFileHandler',
+            'encoding': 'utf-8',
+            'filename': os.path.join(BASE_DIR, 'logs/operation.log'),
+            'formatter': 'default',
+            'backupCount': 3,  # 备份info.log.1 info.log.2 info.log.3 info.log.4
+            'maxBytes': 1024 * 1024 * 50,  # 日志大小50m
+        },
+
     },
+    # 日志实例对象
+    # 所有的实例对象凡是有日志记录这里都会有一份
     'loggers': {
-        # 应用中自定义日志记录器
-        'custom_logs': {
+        '': {
+            'handlers': ['waring', 'console', 'error'],
             'level': 'DEBUG',
-            'handlers': ['console', 'file'],
-            'propagate': True,
+            'propagate': True  # 是否向上传递日志
         },
-        "django": {
-            "level": "DEBUG",
-            "handlers": ["console", "file"],
-            'propagate': False,
+        # 推荐时的日志
+        'operation': {
+            'handlers': ['operation'],
+            'level': 'INFO'
         },
-        # 请求处理相关的日志消息。5xx响应被提升为错误消息；4xx响应被提升为警告消息。
+        'account': {
+            'handlers': ['account'],
+            'level': 'INFO'
+        },
+        # 后台错误时500
         "django.request": {
             "level": "DEBUG",
             "handlers": ["request"],
             'propagate': False,
         },
+        # 每次请求时
         "django.server": {
             "level": "DEBUG",
             "handlers": ["server"],
             'propagate': False,
         },
-        # 代码与数据库交互的消息
-        "django.db.backends": {
-            "level": "DEBUG",
-            "handlers": ["db_backends"],
-            'propagate': False,
-        },
-        "django.utils.autoreload": {
-            "level": "INFO",
-            "handlers": ["autoreload"],
-            'propagate': False,
-        }
-    },
-    'root': {
-        "level": "DEBUG",
-        "handlers": ["root"],
+
     }
+
 }
