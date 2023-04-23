@@ -1,0 +1,50 @@
+version: "3"
+services:
+  front:
+    image: nginx:1.12
+    volumes:
+      - /data/codeminer/nginx/html:/usr/share/nginx/html
+      - /data/codeminer/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "9001:80"
+    restart: always
+    networks:
+      - Codeminer
+  redis:
+    image: redis:6.0.12
+    volumes:
+      - /data/codeminer/redis/data:/data
+      - /data/codeminer/redis/conf/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    ports:
+      - "16381:6379"
+  mysql:
+    image: mysql:5.7
+    ports:
+      - "13308:3306"
+    volumes:
+      - CodeminerMysqlData:/var/lib/mysql
+    networks:
+      - Codeminer
+    env_file:
+      - .codeminer.env
+    restart: always
+  CodeminerMQ:
+    image: rabbitmq:management
+    environment:
+      RABBITMQ_DEFAULT_USER: root
+      RABBITMQ_DEFAULT_PASS: lzb200244
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - CodeminerMQ:/var/lib/rabbitmq
+    networks:
+      - Codeminer
+    restart: always
+networks:
+  Codeminer: #桥接网
+
+volumes:
+  CodeminerMQ:
+  CodeminerMysqlData:
