@@ -1,6 +1,8 @@
 """账户相关"""
 import datetime
 import copy
+import time
+
 from QQLoginTool.QQtool import OAuthQQ
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
@@ -182,7 +184,7 @@ class AccountView(BaseView, ListModelMixin, UpdateModelMixin, GenericAPIView):
             "3": "tencent",
         }
         if not hasattr(obj, "service_" + func_map.get(opt)):
-            return APIResponse('非法请求', code=self.code)
+            return APIResponse(msg='非法请求', code=self.code, status=405)
         try:
             user_obj = getattr(obj, "service_" + func_map.get(opt))()
         except ValidationError as e:
@@ -190,7 +192,12 @@ class AccountView(BaseView, ListModelMixin, UpdateModelMixin, GenericAPIView):
             return APIResponse(msg=e.get_full_details()[0].get("message"),
                                status=StatusResponseEnum.Unauthorized,
                                code=CodeResponseEnum.Unauthorized)
+        except:
+            # todo 记录logger
+            return APIResponse(msg='非法请求', code=self.code, status=405)
         user_obj = user_obj.first()
+        user_obj.last_login = str(datetime.datetime.today())
+        user_obj.save()
         jwt_token = user_obj.get_token()
         return APIResponse({'token': jwt_token}, msg='登入成功')
 
@@ -199,24 +206,28 @@ class AccountView(BaseView, ListModelMixin, UpdateModelMixin, GenericAPIView):
         return APIResponse(self.update(request, *args, **kwargs).data)
 
 
-class RegisterView(BaseView, APIView):
+class RegisterView(BaseView, GenericAPIView, CreateModelMixin):
     """
     注册
     """
+    serializer_class = RegisterSerializer
+    queryset = UserInfo
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        valid = serializer.is_valid(raise_exception=False)
+        if valid:
+            self.perform_create(serializer)
+        else:
+            for k, v in serializer.errors.items():
+                if isinstance(v, list):
+                    raise ValidationError({'msg': v[0], 'code': 1200})
+                msg = v.get('msg')
+                raise ValidationError({'msg': msg, 'code': 1200})
+        return APIResponse(serializer.data, status=201, )
 
     def post(self, request):
-        ser_obj = RegisterSerializer(data=request.data, context={'request': request})
-        if ser_obj.is_valid():
-            ser_obj.save()
-            self.msg = "注册成功"
-        else:
-            data = ser_obj.errors
-            self.code = 1101  # 输入账户相关的错误
-            self.status = 401
-            for k, v in data.items():
-                self.msg = v.get('error')
-                break  # 循环一次就可以了
-        return APIResponse(msg=self.msg, status=self.status, code=self.code)
+        return self.create(request)
 
 
 class InformView(ListModelMixin, DestroyModelMixin, GenericAPIView):

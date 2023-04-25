@@ -1,5 +1,6 @@
 import jwt
 from django.conf import settings
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
 from django_redis import get_redis_connection
 from utils.md5 import make_uuid
@@ -8,21 +9,25 @@ from utils.md5 import make_uuid
 from utils.models import BaseModel
 
 
-class UserInfo(BaseModel):
+class UserInfo(BaseModel, AbstractBaseUser):
+    USERNAME_FIELD = 'email'
     """用户信息"""
     username = models.CharField(
-        max_length=32,
+        max_length=18,
         unique=True,
-        verbose_name='账号'
+
+        verbose_name='账号',
+
     )
     password = models.CharField(
         max_length=32,
         verbose_name='密码',
     )
-    email = models.EmailField(
+    email = models.CharField(
         max_length=64,
         unique=True,
         verbose_name='邮箱'
+
     )
     qqid = models.CharField(
         max_length=128,
@@ -282,5 +287,3 @@ class SiteDataUser(models.Model):
 
     def __str__(self):
         return str(self.user) + ":" + str(self.sitedata)
-
-

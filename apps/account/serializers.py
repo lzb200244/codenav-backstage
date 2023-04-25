@@ -41,41 +41,56 @@ def detail(instance):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    re_password = serializers.CharField(max_length=32, read_only=True)
-    detail = serializers.CharField(required=False)
+    re_password = serializers.CharField(max_length=18, read_only=True)
+    username = serializers.CharField(max_length=18, min_length=6, error_messages={
+        "max_length": "账号长度应该在6-18",
+        "min_length": "账号长度应该在6-18"
+
+    }, required=True)
+    password = serializers.CharField(max_length=18, min_length=6, error_messages={
+        "max_length": "密码长度应该在6-18",
+        "min_length": "密码长度应该在6-18"
+
+    }, required=True)
+    email = serializers.EmailField(error_messages={
+        'invalid': '邮箱已经存在了',
+    }, required=True)
 
     class Meta:
         model = UserInfo
-        fields = "__all__"
-        excludes = ["detail"]
+        fields = ['username', 'email', 'password', 're_password']
 
     def validate_username(self, value):
         exist = UserInfo.objects.filter(username=str(value)).exists()
         if exist:
-            raise ValidationError(detail={"error": "用户名已存在!"})
+            raise ValidationError(detail={"msg": "用户名已存在!"}, code=4000)
         if len(str(value)) < 6:
-            raise ValidationError(detail={"error": "用户名过短!"})
+            raise ValidationError(detail={"msg": "用户名过短!"})
 
         return value
 
     def validate_password(self, value):
+
         return md5(value)
 
     def validate_email(self, value):
+
         obj = Pattern()
         if not obj["email"].match(value):
-            raise ValidationError(detail={"error": "邮箱格式不对!"})
+            raise ValidationError(detail={"msg": "邮箱格式不对!"})
         if UserInfo.objects.filter(email=value).exists():
-            raise ValidationError(detail={"error": "邮箱已经存在!"})
+            raise ValidationError(detail={"msg": "邮箱已经存在!"})
         return value
 
     def validate(self, attrs):
+
         if md5(self.context['request'].data.get("re_password")) != attrs["password"]:
-            raise ValidationError(detail={"error": "两次密码不一致!"})
+            raise ValidationError(detail={"msg": "两次密码不一致!"})
         return attrs
 
     def create(self, validated_data):
         username = validated_data.get("username")
+
         email = validated_data.get("email")
         password = validated_data.get("password")
         detail = UserDetail.objects.create(name="勤劳的" + username, )

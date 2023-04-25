@@ -36,6 +36,7 @@ class RecommendSerializer(serializers.ModelSerializer):
                 user=user
             )
         except SiteDataUser.DoesNotExist:
+            # 默认是为登录的
             return {
                 "star": False
             }
@@ -64,7 +65,8 @@ class RecommendSerializer(serializers.ModelSerializer):
             )
         except SiteDataUser.DoesNotExist:
             return {
-                "rated": False
+                "rated": False,
+                "rating": rating
             }
 
         dic["rated"] = site_user_obj.rated
@@ -292,3 +294,7 @@ class NewsSerializers(serializers.ModelSerializer):
 
         ordering = ['create_time']
         fields = '__all__'
+
+
+class SimilarRecommendationSerializers(serializers.ModelSerializer):
+    pass

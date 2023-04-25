@@ -1,7 +1,11 @@
 import datetime
 import logging
+import time
+from random import sample
+
 from django.db.models import F
 from rest_framework.exceptions import NotFound
+from django.core.exceptions import ValidationError
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.mixins import ListModelMixin, UpdateModelMixin
 from rest_framework.generics import GenericAPIView
@@ -16,15 +20,15 @@ from apps.operation.models import Comments, Images, News, Inform, BillBoard
 from apps.operation.serializers import RecommendSerializer, ReplySerializer, SiteDetailSerializers, NewsSerializers
 from extensions.permissions.IsAuthenticated import CustomIsAuthenticated
 from mycelery.mytasks.email.tasks import send_user_email
-
 from utils.GetSiteDetail import GetSiteDetail
+from utils.recommends.recommend import recommend
 from utils.response import APIResponse
 from utils.Tencent.cos import tencent
 from utils.md5 import make_uuid
 from utils.pagination import MyPagination
 from utils.workshop.ReFactory import Pattern
 
-logger = logging.getLogger('operation')
+logger = logging.getLogger('account')
 
 
 class AllSelects(APIView):
@@ -148,6 +152,7 @@ class ImageUpdateView(APIView):
 
 class SiteListView(BaseView, ListModelMixin, GenericAPIView):
     queryset = SiteData.objects.all()
+    # todo error
     throttle_classes = [AnonRateThrottle, ]  # 限流
     serializer_class = RecommendSerializer  # 序列化器
     pagination_class = MyPagination  # 分页器
@@ -173,7 +178,6 @@ class SiteListView(BaseView, ListModelMixin, GenericAPIView):
         return self.paginator.paginate_queryset(queryset, self.request, view=self)
 
     def post(self, request):
-        # print(request.user)
         """
         :param:ordering 排序方式 default:
         :param:page 页码 default:
@@ -206,6 +210,8 @@ class SiteDetailView(BaseView, ListModelMixin, GenericAPIView):
         try:
             self.queryset = SiteData.objects.get(uid=uid)
         except SiteData.DoesNotExist:
+            raise NotFound({'msg': '页面走丢了！！', 'code': 1024})
+        except ValidationError:
             raise NotFound({'msg': '页面走丢了！！', 'code': 1024})
         return self.queryset
 
@@ -368,3 +374,55 @@ class EmailUtilView(APIView):
 
         send_user_email.delay(email)
         return APIResponse(**{"code": 1000, "msg": "成功"})
+
+
+#
+class SimilarRecommendation(ListModelMixin, GenericAPIView):
+    """基于相似度的推荐"""
+    throttle_classes = [AnonRateThrottle, ]
+    serializer_class = RecommendSerializer  # 序列化器
+
+    def get_queryset(self):
+        uid = self.request.query_params.get('uid')
+        try:
+            # time.sleep(1)
+            # todo  应该处于在缓存
+            recommend_list = SiteData.objects.all()
+            data = []
+            for site in recommend_list:
+                data.append({
+                    'uid': str(site.pk),
+                    'name': site.name,
+                    'categories': [categories['categories'] for categories in site.datatype.values('categories')],
+                    'create_time': site.create_time.timestamp(),
+                    'show': site.show,
+                    'introduce': site.introduce,
+                    'rating': site.rating
+                })
+            ct = SiteData.objects.get(uid=uid)
+            current_site = {
+                'uid': str(ct.pk),
+                'name': ct.name,
+                'categories': [categories['categories'] for categories in ct.datatype.values('categories')],
+                'create_time': ct.create_time.timestamp(),
+                'show': ct.show,
+                'introduce': ct.introduce,
+                'rating': ct.rating
+            }
+            recommend_uid_list = recommend.recommend_similar_knn(current_site, data)
+            # 筛选出类似的
+            self.queryset = SiteData.objects.filter(uid__in=sample(recommend_uid_list, 3))
+            #     datatype
+        except SiteData.DoesNotExist:
+            # todo 记录日志
+            raise NotFound({'msg': '页面走丢了！！', 'code': 1024})
+        # 不是有效的uid
+        except ValidationError:
+            # todo 记录日志
+            logger.warning('记录日志')
+            raise NotFound({'msg': '页面走丢了！！', 'code': 1024})
+        return self.queryset
+
+    def get(self, request):
+
+        return APIResponse(self.list(request).data)

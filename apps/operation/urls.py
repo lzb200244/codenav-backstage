@@ -2,7 +2,7 @@ from django.urls import path
 
 from apps.operation.views import (BillBoardView, SiteDataOperation, ReplyView,
                                   SiteListView, EmailUtilView, SiteDetailView, AllSelects, NewsView, SpiderView,
-                                  ImageUpdateView)
+                                  ImageUpdateView, SimilarRecommendation)
 
 urlpatterns = [
     # 点赞与收藏
@@ -27,4 +27,6 @@ urlpatterns = [
     path(r"all_select", AllSelects.as_view(), name='all_select'),
     # 项目日程
     path(r"news", NewsView.as_view(), name='news'),
+    path(r"recommend", SimilarRecommendation.as_view(), name='news'),
+
 ]
